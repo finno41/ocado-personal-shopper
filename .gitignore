@@ -1,0 +1,16 @@
+# personal recipes — keep README + generic examples
+data/recipes/*.md
+!data/recipes/README.md
+!data/recipes/example-*.md
+# personal shopping lists — keep the folder only
+data/shopping-lists/*
+!data/shopping-lists/.gitkeep
+# personal working config — templates committed as *.example.md
+data/consumables.md
+data/recipe-urls.md
+data/shopping-preferences.md
+# secrets / local MCP config
+.mcp.json
+.env
+# OS noise
+.DS_Store
