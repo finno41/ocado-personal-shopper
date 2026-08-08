@@ -70,7 +70,10 @@ def _build_url(retailer_product_id, name):
 
 def _map_product(it):
     rating_summary = it.get("ratingSummary") or {}
+    review_count = int(_num(rating_summary.get("count")))
     rating_raw = rating_summary.get("overallRating")
+    # No reviews → no meaningful rating (avoid a misleading 0.0).
+    rating = None if (review_count == 0 or rating_raw in (None, "")) else _num(rating_raw, default=None)
     price = it.get("price") or {}
     retailer_id = str(it.get("retailerProductId", ""))
     return {
@@ -81,8 +84,8 @@ def _map_product(it):
         "pricePerUnit": _format_unit_price(it.get("unitPrice")),
         "packSize": str(it.get("packSizeDescription", "") or ""),
         "inStock": bool(it.get("available", False)),
-        "rating": (None if rating_raw in (None, "") else _num(rating_raw, default=None)),
-        "reviewCount": int(_num(rating_summary.get("count"))),
+        "rating": rating,
+        "reviewCount": review_count,
         "productId": retailer_id,
         "sku": str(it.get("productId", "") or ""),
         "url": _build_url(retailer_id, it.get("name", "")),
@@ -161,3 +164,50 @@ def parse_products(raw):
             seen.add(rid)
             out.append(_map_product(it))
     return out
+
+
+def _unit_price_value(product):
+    """Numeric £/unit from a product's pricePerUnit string, for sorting. inf if absent."""
+    m = re.search(r"£\s*([0-9]+(?:\.[0-9]+)?)", product.get("pricePerUnit", "") or "")
+    return float(m.group(1)) if m else float("inf")
+
+
+def sort_products(products, sort):
+    """Return products ordered by the chosen key (client-side). Unknown/None = as-is."""
+    if sort == "price":
+        return sorted(products, key=lambda p: p["price"])
+    if sort == "rating":
+        return sorted(products, key=lambda p: (p["rating"] is None, -(p["rating"] or 0)))
+    if sort == "price-per-unit":
+        return sorted(products, key=_unit_price_value)
+    return products
+
+
+def main(argv=None):
+    import argparse
+    import sys
+
+    ap = argparse.ArgumentParser(description="Search Ocado and print products as JSON.")
+    ap.add_argument("query", help="search keyword, e.g. milk")
+    ap.add_argument("--limit", type=int, default=30, help="max products (default 30)")
+    ap.add_argument("--sort", choices=["price", "rating", "price-per-unit"], default=None,
+                    help="order results before output (client-side)")
+    args = ap.parse_args(argv)
+
+    try:
+        products = parse_products(fetch_search(args.query, args.limit))
+    except Exception as exc:  # noqa: BLE001 - fail cleanly so the caller can fall back
+        print(f"ocado_search: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+    if not products:
+        print("ocado_search: no products returned (blocked, or non-UK IP?)", file=sys.stderr)
+        return 2
+
+    products = sort_products(products, args.sort)[:args.limit]
+    json.dump(products, sys.stdout, ensure_ascii=False, indent=2)
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
