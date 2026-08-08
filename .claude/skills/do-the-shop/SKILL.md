@@ -29,11 +29,13 @@ Orchestrates the whole weekly shop. The guiding principles:
 - `shopping-preferences.md` — standing preferences for the online shop (store, product
   choice, substitutions, dietary/brand/packaging), grown from user feedback → `SHOP_PREFS`
 
-**Connector:** the **`studio-amba/ocado-scraper`** actor via the Apify MCP
+**Product search — two sources (Step 12):** the **free default is the local scraper**
+`scripts/ocado_search.py` (stdlib Python; run from a UK IP; no cost). The **paid
+fallback** is the **`studio-amba/ocado-scraper`** actor via the Apify MCP
 (`mcp.apify.com`, Bearer API token; tool `mcp__apify-ocado__studio-amba--ocado-scraper`).
-It calls Ocado's backend API (no browser) and returns real products with price, unit
-price, pack size, stock, ratings and `productId`/`sku`/`url`. **Ocado geo-restricts to
-UK IPs, so every call must pass `proxyConfiguration:
+Both return real products with price, unit price, pack size, stock, ratings and
+`productId`/`sku`/`url`. The Apify actor calls Ocado's backend API (no browser). **Ocado
+geo-restricts to UK IPs, so every Apify call must pass `proxyConfiguration:
 {useApifyProxy:true, apifyProxyGroups:["RESIDENTIAL"], apifyProxyCountry:"GB"}`** —
 datacenter/other-country proxies return 0 results. Used in Step 12; if it isn't
 configured, that step is skipped and product choice falls to the browser session.
@@ -194,20 +196,26 @@ Loop until zero issues (same cap-5 rule). Prompt in `references/verification.md`
 Present the final, deducted shopping list. Offer to save it to `data/shopping-lists/`
 (dated, e.g. `data/shopping-lists/YYYY-MM-DD.md`) if the user wants a copy.
 
-## Step 12 — Match products with the Ocado product scraper
-Turn each item on the final list into a real Ocado product using the **Apify Ocado
-product-search MCP connector** (read-only — it searches and returns product data; it
-can't add to a basket). If the connector isn't configured, skip to Step 14 and let the
-browser session pick products instead.
+## Step 12 — Match products with an Ocado product scraper
+Turn each item on the final list into a real Ocado product. Both sources below return
+the same fields (name, brand, price, pricePerUnit, packSize, inStock, rating,
+reviewCount, productId, sku, url). For **each** item, get candidate products from the
+first available source:
 
-For **each** item on the list:
-- Call `mcp__apify-ocado__studio-amba--ocado-scraper` with `searchQuery` = the item,
-  `maxProducts: 10` (keep the cap low for cost), and **always** `proxyConfiguration:
-  {useApifyProxy:true, apifyProxyGroups:["RESIDENTIAL"], apifyProxyCountry:"GB"}`. Use
-  `sortBy: pricePerAscending` when the preference is cheapest-per-gram (e.g. cashews),
-  or `customerRating` when reviews matter most; otherwise leave default. The run returns
-  a `datasetId` — fetch rows with `get-dataset-items` (fields: name, brand, price,
-  pricePerUnit, packSize, inStock, rating, reviewCount, productId, sku, url).
+1. **Local scraper (free, default):** run via Bash
+   `python3 scripts/ocado_search.py "<item>" --limit 30 [--sort price|rating|price-per-unit]`
+   and read the JSON array from stdout. Use `--sort price-per-unit` for cheapest-per-gram
+   preferences (e.g. cashews) and `--sort rating` when reviews matter most. Use it if it
+   exits 0 with ≥1 product. (Requires a UK IP; no cost. Exit 2 = no products.)
+2. **Apify connector (paid fallback):** if the script is absent or returns nothing, call
+   `mcp__apify-ocado__studio-amba--ocado-scraper` with `searchQuery` = the item,
+   `maxProducts: 10` (low cap for cost), and **always** `proxyConfiguration:
+   {useApifyProxy:true, apifyProxyGroups:["RESIDENTIAL"], apifyProxyCountry:"GB"}`;
+   `sortBy: pricePerAscending`/`customerRating` as above. Fetch rows with
+   `get-dataset-items`.
+3. **Browser session:** if neither is available, let the browser pick products (Step 14).
+
+Then, for each item:
 - Pick the **preferred product**: honour any named-product preference in `SHOP_PREFS`
   first (Burford Brown eggs, Fitzgerald bagels, the Bio&Me granola 360 g rule,
   cheapest-per-gram cashews, ~1 kg onion bags, etc.); otherwise choose on **best price +
