@@ -18,7 +18,9 @@ product-search API request and prints a JSON array to stdout. Stdlib-only (`urll
 python3 scripts/ocado_search.py "<query>" [--limit N] [--sort price|rating|price-per-unit]
 ```
 - `<query>`: search keyword (e.g. `milk`). Required.
-- `--limit N`: max products to return (default 10).
+- `--limit N`: max products to return (default 30). The local scraper is free, so a
+  larger pool is fine and gives better price/review comparison. (The Apify fallback,
+  which is billed per result, keeps its own low cap of ~10 — see Skill integration.)
 - `--sort`: optional ordering; maps to Ocado's sort param when available.
 - Output: a JSON array to **stdout**. On failure: a clear message to **stderr** and a
   non-zero exit code (so the skill can detect failure and fall back).
@@ -46,7 +48,8 @@ postcode requirement are taken from a **captured request** (the user's browser
 `do-the-shop` Step 12 gains a preference order for product matching:
 1. **Local script** (`scripts/ocado_search.py`) if present and it returns results — the
    free default.
-2. **Apify connector** (`studio-amba/ocado-scraper`) as automatic fallback.
+2. **Apify connector** (`studio-amba/ocado-scraper`) as automatic fallback — kept at a
+   low cap (~10 results) because it is billed per result, unlike the free local scraper.
 3. **Browser session** picks products if neither is available.
 The rest of Step 12 (choosing the preferred product, honouring `SHOP_PREFS`, storing
 alternatives by code) is unchanged.
