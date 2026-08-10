@@ -46,6 +46,10 @@ brunch), and the per-serving ingredient list.
   conversions (1 cup water ≈ 240 ml, 1 tbsp ≈ 15 ml, 1 tsp ≈ 5 ml, 1 oz ≈ 28 g,
   1 lb ≈ 454 g, 1 stick butter ≈ 113 g). For countable items (eggs, cloves, onions)
   keep the count.
+  **Exception — dry spices/seasonings stay in tsp/tbsp:** ground spices, baking powder,
+  sesame seeds, salt and sugar are bought as jars/packets, so keep their tsp/tbsp amount
+  rather than converting to ml/g. Liquids (oils, vinegars, juices, spirits) and chopped
+  fresh herbs still convert to ml/g. See do-the-shop Step 4.
 - If an amount is genuinely vague ("a splash", "to taste"), keep it as-is rather than
   inventing precision.
 - If the user just says "cheese" with no type specified, record it as **cheddar

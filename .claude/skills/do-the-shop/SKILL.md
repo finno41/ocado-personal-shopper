@@ -107,6 +107,17 @@ using a reasonable typical single-item weight, note the assumption used, round u
 the next whole vegetable, and note any surplus. This carries through unchanged into the
 compiled list in Step 6.
 
+**Dry spices and seasonings stay in tsp/tbsp, not grams/ml.** Dry store-cupboard
+seasonings — ground spices (cumin, turmeric, cayenne, coriander, cardamom, fenugreek,
+amchur, mustard powder, etc.), baking powder, sesame seeds, salt and sugar — are bought
+as jars/packets, so their tsp/tbsp amount is a cooking instruction, not a purchase
+quantity. Keep them in tsp/tbsp and scale the number (e.g. `1/2 tsp cumin` ×2 →
+`1 tsp cumin`); do **not** volume-convert them to ml/g (nobody buys "10 ml turmeric").
+By contrast, **liquids** (oils, vinegars, lemon/lime juice, spirits like amaretto) and
+**chopped fresh herbs** *are* expressed in ml/g, since those amounts do drive how much
+to buy. This mixed convention is intentional — tell the Step 5 checker so it doesn't
+flag the spices as unconverted. This carries through into the compiled list in Step 6.
+
 Produce a **per-recipe scaled ingredient list**. Keep them split by recipe at this
 stage — do not combine yet.
 

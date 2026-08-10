@@ -54,6 +54,10 @@ list, the base serving count ("Serves N"), and a one-line description.
   1 tsp ≈ 5 ml). Keep counts for countable items. Vague amounts ("a splash", "to taste")
   stay as-is. If an ingredient just says "cheese" with no type specified, record it as
   **cheddar cheese** — that's the household default.
+  **Exception — dry spices/seasonings stay in tsp/tbsp:** ground spices, baking powder,
+  sesame seeds, salt and sugar are bought as jars/packets, so keep their tsp/tbsp amount
+  rather than converting to ml/g (nobody buys "10 ml turmeric"). Liquids (oils, vinegars,
+  juices, spirits) and chopped fresh herbs still go to ml/g. See do-the-shop Step 4.
 - **Save the recipe** to `RECIPES_DIR/<slug>.md`, same file format as described recipes
   (see `RECIPES_DIR/README.md`), plus two extra frontmatter fields: `source: url` and
   `url: <the url>`. `base_servings` is whatever was extracted (not forced to 1 — URL
