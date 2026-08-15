@@ -38,3 +38,27 @@ class TestParse(unittest.TestCase):
         self.assertEqual(len(r["ingredients"]), 1)
         self.assertEqual(r["ingredients"][0]["id"], "dried-pasta")
         self.assertEqual(r["ingredients"][0]["qty"], 100)
+
+
+class TestConvert(unittest.TestCase):
+    def test_liquid_tbsp_to_ml(self):
+        self.assertEqual(re_eng.to_base(2, "tbsp", "liquid", "olive oil"), (30.0, "ml"))
+
+    def test_by_weight_oz_to_g(self):
+        val, unit = re_eng.to_base(1, "oz", "by-weight", "cabbage")
+        self.assertAlmostEqual(val, 28.0)
+        self.assertEqual(unit, "g")
+
+    def test_by_weight_cup_uses_density(self):
+        # 2 cups ground almonds @ 100 g/cup
+        val, unit = re_eng.to_base(2, "cup", "by-weight", "ground almonds")
+        self.assertEqual((val, unit), (200.0, "g"))
+
+    def test_dry_staple_stays_ml_equiv(self):
+        self.assertEqual(re_eng.to_base(1, "tsp", "dry-staple", "cumin"), (5.0, "ml-dry"))
+
+    def test_count_passthrough(self):
+        self.assertEqual(re_eng.to_base(3, "clove", "count", "garlic"), (3.0, "count"))
+
+    def test_none_qty(self):
+        self.assertEqual(re_eng.to_base(None, "g", "by-weight", "salt"), (None, "g"))
