@@ -62,3 +62,15 @@ class TestConvert(unittest.TestCase):
 
     def test_none_qty(self):
         self.assertEqual(re_eng.to_base(None, "g", "by-weight", "salt"), (None, "g"))
+
+
+class TestScale(unittest.TestCase):
+    def test_scale_multiplies_qty(self):
+        ing = {"id": "x", "name": "x", "qty": 100, "unit": "g", "class": "by-weight", "aisle": "Dry / Pantry"}
+        out = re_eng.scale_ingredient(ing, 1.5)
+        self.assertEqual(out["qty_scaled"], 150.0)
+
+    def test_scale_none_stays_none(self):
+        ing = {"id": "salt", "name": "salt", "qty": None, "unit": "g", "class": "by-weight", "aisle": "Herbs & Spices"}
+        out = re_eng.scale_ingredient(ing, 3)
+        self.assertIsNone(out["qty_scaled"])

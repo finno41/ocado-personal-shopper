@@ -70,3 +70,9 @@ def to_base(qty, unit, cls, name):
         return float(qty) * VOLUME_TO_ML.get(unit, 1.0), "ml-dry"
     # count, whole-veg
     return float(qty), "count"
+
+
+def scale_ingredient(ing, factor):
+    out = dict(ing)
+    out["qty_scaled"] = None if ing.get("qty") is None else float(ing["qty"]) * float(factor)
+    return out
