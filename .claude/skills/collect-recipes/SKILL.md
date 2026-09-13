@@ -58,16 +58,19 @@ list, the base serving count ("Serves N"), and a one-line description.
   sesame seeds, salt and sugar are bought as jars/packets, so keep their tsp/tbsp amount
   rather than converting to ml/g (nobody buys "10 ml turmeric"). Liquids (oils, vinegars,
   juices, spirits) and chopped fresh herbs still go to ml/g. See do-the-shop Step 4.
-- **Save the recipe** to `RECIPES_DIR/<slug>.md`, same file format as described recipes
-  (see `RECIPES_DIR/README.md`), plus two extra frontmatter fields: `source: url` and
-  `url: <the url>`. `base_servings` is whatever was extracted (not forced to 1 — URL
-  recipes keep their own serving count). If a file with that slug already exists, ask
-  whether to overwrite or save under a new name.
-- Also log the recipe to `URL_LIBRARY` for browsing/ratings (name, URL, type, serves,
-  description, `Rating: —`), newest at top — unless the same URL is already there. New
-  URL recipes are always saved **unrated**; do-the-shop will collect the rating on the
-  next shop. `URL_LIBRARY` is just an index for browsing and ratings — the ingredients
-  live in the `RECIPES_DIR` file, not here.
+- **Save the recipe as a normal recipe — NOT as a "URL recipe"** (standing user
+  preference: scrape the ingredients and save them like any other recipe). Write it to
+  `RECIPES_DIR/<slug>.md` in the same file format as described recipes (see
+  `RECIPES_DIR/README.md`) with `source: described` and a **single, flat, combined
+  ingredient list** — merge any user additions and de-duplicate; do **not** split by the
+  source page's sections and do **not** add a `url:` frontmatter field. Keep the origin
+  URL only as a line in `## Notes`. `base_servings` is whatever was extracted (not forced
+  to 1 — keep the source's own serving count). If a file with that slug already exists,
+  ask whether to overwrite or save under a new name.
+- **Do not log URL recipes to `URL_LIBRARY`.** Per the same preference, scraped recipes
+  are just normal saved recipes, pickable from the saved list; there's no separate
+  URL-index entry or ratings pass for them. (`URL_LIBRARY` remains only as a legacy
+  browse index for any pre-existing entries.)
 
 ### 2b. Describe path
 Invoke the **describe-recipe** skill (pass along this meal type so it can filter the

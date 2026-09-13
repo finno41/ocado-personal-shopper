@@ -29,18 +29,13 @@ Orchestrates the whole weekly shop. The guiding principles:
 - `shopping-preferences.md` — standing preferences for the online shop (store, product
   choice, substitutions, dietary/brand/packaging), grown from user feedback → `SHOP_PREFS`
 
-**Product search — two sources (Step 12):** the **free default is the local scraper**
-`scripts/ocado_search.py` (stdlib Python; run from a UK IP; no cost). The **paid
-fallback** is the **`studio-amba/ocado-scraper`** actor via the Apify MCP
-(`mcp.apify.com`, Bearer API token; tool `mcp__apify-ocado__studio-amba--ocado-scraper`).
-Both return real products with price, unit price, pack size, stock, ratings and
-`productId`/`sku`/`url`. The Apify actor calls Ocado's backend API (no browser). **Ocado
-geo-restricts to UK IPs, so every Apify call must pass `proxyConfiguration:
-{useApifyProxy:true, apifyProxyGroups:["RESIDENTIAL"], apifyProxyCountry:"GB"}`** —
-datacenter/other-country proxies return 0 results. Used in Step 12; if it isn't
-configured, that step is skipped and product choice falls to the browser session.
-Note: the actor reserves a $5 max-charge per run, so the Apify balance must sit above $5
-to launch (actual cost is only ~pennies/item, ~£1–2 a shop).
+**Product search — free local scraper only (Step 12):** the local scraper
+`scripts/ocado_search.py` (stdlib Python; run from a UK IP; no cost) returns real
+products with price, unit price, pack size, stock, ratings and `productId`/`sku`/`url`.
+It requires a UK IP (Ocado geo-restricts to the UK). If the scraper is unavailable or
+can't resolve a given item, that item falls to the browser session (Step 14) to choose.
+**No paid product-search service is used** — per user preference, there is no Apify (or
+other paid) fallback.
 
 Work through the steps in order. Keep the user's answers organized as you go (a running
 scratchpad of recipes → base servings → chosen servings → ingredients is worth keeping).
@@ -207,24 +202,28 @@ Loop until zero issues (same cap-5 rule). Prompt in `references/verification.md`
 Present the final, deducted shopping list. Offer to save it to `data/shopping-lists/`
 (dated, e.g. `data/shopping-lists/YYYY-MM-DD.md`) if the user wants a copy.
 
-## Step 12 — Match products with an Ocado product scraper
-Turn each item on the final list into a real Ocado product. Both sources below return
-the same fields (name, brand, price, pricePerUnit, packSize, inStock, rating,
-reviewCount, productId, sku, url). For **each** item, get candidate products from the
-first available source:
+## Step 12 — Match products with the Ocado product scraper
+Turn each item on the final list into a real Ocado product. The scraper returns these
+fields (name, brand, price, pricePerUnit, packSize, inStock, rating, reviewCount,
+productId, sku, url). For **each** item, get candidate products:
 
-1. **Local scraper (free, default):** run via Bash
-   `python3 scripts/ocado_search.py "<item>" --limit 30 [--sort price|rating|price-per-unit]`
-   and read the JSON array from stdout. Use `--sort price-per-unit` for cheapest-per-gram
-   preferences (e.g. cashews) and `--sort rating` when reviews matter most. Use it if it
-   exits 0 with ≥1 product. (Requires a UK IP; no cost. Exit 2 = no products.)
-2. **Apify connector (paid fallback):** if the script is absent or returns nothing, call
-   `mcp__apify-ocado__studio-amba--ocado-scraper` with `searchQuery` = the item,
-   `maxProducts: 10` (low cap for cost), and **always** `proxyConfiguration:
-   {useApifyProxy:true, apifyProxyGroups:["RESIDENTIAL"], apifyProxyCountry:"GB"}`;
-   `sortBy: pricePerAscending`/`customerRating` as above. Fetch rows with
-   `get-dataset-items`.
-3. **Browser session:** if neither is available, let the browser pick products (Step 14).
+1. **Local scraper (free) — use BATCH MODE for a whole shop:** don't fire dozens of
+   one-off calls. Each single-query call spins up a *fresh cold session* (homepage warm-up
+   + API hit), and a rapid burst of those trips Ocado's anti-bot — the search API starts
+   returning **HTTP 202 with an empty body** (a soft IP block that then takes ~20–30 min
+   of quiet to clear). Instead, write all items to a JSON file and run **one** batch:
+   `python3 scripts/ocado_search.py --batch items.json --gap 2` — this warms the session
+   **once** and reuses the cookie jar across every query (one request per item, small gap),
+   which stays under the radar. `items.json` is a list of
+   `{"label","query","sort","limit"}` (sort ∈ price|rating|price-per-unit; use
+   price-per-unit for cheapest-per-gram prefs like cashews, rating when reviews matter).
+   Output is a JSON object keyed by label → `{query, products:[...]}`. A single query
+   still works (`ocado_search.py "<item>" --limit 30 [--sort ...]`) but reserve it for
+   one-offs — **never** run a rapid series of them, and don't make stray test calls before
+   a batch (they share the IP and can trigger the block). Requires a UK IP; no cost.
+2. **Browser session:** if the scraper is unavailable/blocked, or can't resolve a
+   particular item, let the browser pick that item's product (Step 14). **No paid fallback
+   is used** (per user preference — no Apify or other paid service).
 
 Then, for each item:
 - Pick the **preferred product**: honour any named-product preference in `SHOP_PREFS`
