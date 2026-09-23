@@ -71,6 +71,15 @@ list, the base serving count ("Serves N"), and a one-line description.
   are just normal saved recipes, pickable from the saved list; there's no separate
   URL-index entry or ratings pass for them. (`URL_LIBRARY` remains only as a legacy
   browse index for any pre-existing entries.)
+- If the page blocks scripted fetches (e.g. a bot/security checkpoint), try reading it
+  in the browser before falling back to asking the user to paste it.
+
+### 2a-bis. Photo / pasted recipe (cookbook page, screenshot, pasted text)
+Treat exactly like the URL path: extract name, base servings, full ingredient list;
+fold in user additions; convert to metric with the same rules; and **always save it** to
+`RECIPES_DIR/<slug>.md` (`source: described`, flat de-duplicated ingredient list, the
+source's own serving count, origin e.g. "cookbook photo, p.135" noted in `## Notes`) so
+it can be recalled from the saved list next time without the photo.
 
 ### 2b. Describe path
 Invoke the **describe-recipe** skill (pass along this meal type so it can filter the
