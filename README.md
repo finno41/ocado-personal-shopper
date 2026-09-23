@@ -81,6 +81,10 @@ examples), shopping lists, and your working `consumables.md` / `recipe-urls.md` 
 `shopping-preferences.md`, plus `.mcp.json`. Only the folder structure, generic examples,
 `*.example.md` templates, and the skills are committed.
 
+## Contributing
+
+All changes go directly on `main` — no feature branches or pull requests.
+
 ## Disclaimer
 
 For personal, low-volume use. Scraping Ocado is subject to Ocado's Terms of Service —
