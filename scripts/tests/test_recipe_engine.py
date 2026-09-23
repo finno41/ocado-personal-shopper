@@ -74,3 +74,17 @@ class TestScale(unittest.TestCase):
         ing = {"id": "salt", "name": "salt", "qty": None, "unit": "g", "class": "by-weight", "aisle": "Herbs & Spices"}
         out = re_eng.scale_ingredient(ing, 3)
         self.assertIsNone(out["qty_scaled"])
+
+
+class TestRounding(unittest.TestCase):
+    def test_round_tins_rounds_up_and_reports_surplus(self):
+        # 1100 g needed, 400 g tins -> 3 tins (1200 g), 100 g surplus
+        self.assertEqual(re_eng.round_tins(1100, 400), (3, 100.0))
+
+    def test_round_tins_exact(self):
+        self.assertEqual(re_eng.round_tins(800, 400), (2, 0.0))
+
+    def test_round_whole_veg_rounds_up(self):
+        items, surplus = re_eng.round_whole_veg(1.4)
+        self.assertEqual(items, 2)
+        self.assertAlmostEqual(surplus, 0.6)
