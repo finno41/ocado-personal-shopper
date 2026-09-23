@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "apify-ocado": {
-      "type": "http",
-      "url": "https://mcp.apify.com/?actors=studio-amba/ocado-scraper",
-      "headers": { "Authorization": "Bearer YOUR_APIFY_TOKEN" }
-    }
-  }
-}
