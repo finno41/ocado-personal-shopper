@@ -153,6 +153,11 @@ Merge all scaled per-recipe ingredients (plus the chosen consumables) into **one
   etc.): keep them expressed as a whole-number count (e.g. `4 courgettes`), summing
   total weight/count needed across recipes first, then recomputing the whole-item count
   for the combined total.
+- **Combine everyday rice types into one line.** Jasmine, basmati, long-grain and
+  unspecified "rice" are interchangeable for this household — sum them into a single
+  rice line (named after the most specific type, e.g. `1600 g jasmine rice`) and note
+  the per-recipe split. Keep genuinely different rices separate (arborio/risotto,
+  sushi, pudding, brown, wild); if unsure whether two rices are similar enough, ask.
 - Annotate each line with the recipe(s) it came from, e.g. `500 g onions (Bolognese,
   Frittata)`. Consumables are annotated `(consumable)`.
 - **Apply product preferences from `SHOP_PREFS`** (read it fresh). Where a line matches
