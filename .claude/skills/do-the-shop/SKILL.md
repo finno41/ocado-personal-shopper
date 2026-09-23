@@ -29,6 +29,7 @@ Orchestrates the whole weekly shop. The guiding principles:
 - `shopping-preferences.md` — standing preferences for the online shop (store, product
   choice, substitutions, dietary/brand/packaging), grown from user feedback → `SHOP_PREFS`
 
+<!-- PAUSED (see note above Step 12): product search is not currently run.
 **Product search — free local scraper only (Step 12):** the local scraper
 `scripts/ocado_search.py` (stdlib Python; run from a UK IP; no cost) returns real
 products with price, unit price, pack size, stock, ratings and `productId`/`sku`/`url`.
@@ -36,6 +37,12 @@ It requires a UK IP (Ocado geo-restricts to the UK). If the scraper is unavailab
 can't resolve a given item, that item falls to the browser session (Step 14) to choose.
 **No paid product-search service is used** — per user preference, there is no Apify (or
 other paid) fallback.
+-->
+
+**Scope: Steps 0–11 only.** The skill currently ends at Step 11 (the final, deducted
+shopping list). Steps 12–16 (Ocado product matching, browser basket-building, basket
+verification, preference capture) are **paused** and commented out below — do not run
+them, and do not offer to, until the user re-enables them.
 
 Work through the steps in order. Keep the user's answers organized as you go (a running
 scratchpad of recipes → base servings → chosen servings → ingredients is worth keeping).
@@ -202,10 +209,26 @@ Loop until zero issues (same cap-5 rule). Prompt in `references/verification.md`
 Present the final, deducted shopping list. Offer to save it to `data/shopping-lists/`
 (dated, e.g. `data/shopping-lists/YYYY-MM-DD.md`) if the user wants a copy.
 
+**STOP here.** This is the end of the skill for now. Do not continue to product
+matching, basket-building or anything below.
+
+<!--
+PAUSED — Steps 12–16 are deliberately disabled until AI browser interactions are
+reliable enough to build the Ocado basket. Kept here intact so they can be re-enabled
+by removing this comment block (and the one around "Product search" at the top, plus
+the "Scope: Steps 0–11 only" note).
+
 ## Step 12 — Match products with the Ocado product scraper
 Turn each item on the final list into a real Ocado product. The scraper returns these
 fields (name, brand, price, pricePerUnit, packSize, inStock, rating, reviewCount,
 productId, sku, url). For **each** item, get candidate products:
+
+> ⛔ **NEVER repeat the burst mistake.** Do the product search as **one warm-session
+> batch run** and nothing else. Do **not** loop the single-query command over many items,
+> do **not** fire "just one quick test" call before/after the batch, and do **not** run
+> two scraper processes at once. Every extra cold request shares your IP and pushes Ocado
+> toward the 202-empty soft block, which then costs ~20–30 min of downtime. One batch, one
+> warm session, done. This happened once (2026-09-13) and must not happen again.
 
 1. **Local scraper (free) — use BATCH MODE for a whole shop:** don't fire dozens of
    one-off calls. Each single-query call spins up a *fresh cold session* (homepage warm-up
@@ -277,6 +300,9 @@ After the shop, ask the user for any feedback — brand preferences, dietary rul
 packaging (loose vs bagged), substitution tolerance, delivery-slot habits, anything.
 Append any **new** preferences to `SHOP_PREFS` (de-duplicated, in the right section) so
 they carry into every future shop. Same grow-over-time mechanism as the consumables list.
+
+END OF PAUSED STEPS 12–16
+-->
 
 ---
 
