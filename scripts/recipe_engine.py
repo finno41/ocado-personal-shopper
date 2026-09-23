@@ -1,5 +1,6 @@
 """Deterministic shopping-list engine for do-the-shop. Standard library only."""
 import json
+import math
 import re
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
@@ -76,3 +77,20 @@ def scale_ingredient(ing, factor):
     out = dict(ing)
     out["qty_scaled"] = None if ing.get("qty") is None else float(ing["qty"]) * float(factor)
     return out
+
+
+TYPICAL_WEIGHTS = {  # grams per single item, for whole-veg given by weight
+    "aubergine": 250.0, "cauliflower": 650.0, "cabbage": 900.0,
+    "courgette": 200.0, "cucumber": 300.0, "butternut squash": 900.0,
+    "onion": 150.0, "red onion": 150.0, "red pepper": 160.0,
+}
+
+
+def round_tins(total_g, tin_size):
+    tins = math.ceil(total_g / tin_size)
+    return tins, round(tins * tin_size - total_g, 2)
+
+
+def round_whole_veg(total_count):
+    items = math.ceil(total_count)
+    return items, round(items - total_count, 2)
