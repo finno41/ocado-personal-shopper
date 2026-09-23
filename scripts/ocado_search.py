@@ -125,15 +125,29 @@ def _opener():
     )
 
 
-def fetch_search(query, limit=30, timeout=20):
-    """Warm up a cookie session on the homepage, then call the search API.
+def warm_opener(timeout=20):
+    """Build an opener and warm a cookie session on the homepage.
 
-    Returns the raw parsed JSON. Requires a UK IP. Raises urllib errors on failure.
+    Returns an opener carrying global_sid/AWSALB/VISITORID cookies. Reuse it across many
+    searches so we present one persistent, human-looking session rather than a fresh cold
+    connection per query (which trips Ocado's anti-bot). Requires a UK IP.
     """
     opener = _opener()
     base = {"User-Agent": USER_AGENT, "Accept-Language": "en-GB,en-US;q=0.9"}
-    # Warm-up: collect global_sid/AWSALB/VISITORID cookies (no WAF token needed).
     opener.open(urllib.request.Request(HOMEPAGE, headers=base), timeout=timeout).read()
+    return opener
+
+
+def fetch_search(query, limit=30, timeout=20, opener=None):
+    """Call the search API and return the raw parsed JSON.
+
+    If `opener` is given, reuse that already-warmed session (batch mode). Otherwise build
+    and warm a one-shot session for this single call. Requires a UK IP. Raises urllib
+    errors on failure.
+    """
+    base = {"User-Agent": USER_AGENT, "Accept-Language": "en-GB,en-US;q=0.9"}
+    if opener is None:
+        opener = warm_opener(timeout=timeout)
     api_headers = dict(base)
     api_headers.update({
         "Accept": "application/json; charset=utf-8",
@@ -143,6 +157,41 @@ def fetch_search(query, limit=30, timeout=20):
     req = urllib.request.Request(build_url(query, limit), headers=api_headers)
     with opener.open(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def run_batch(items, gap=2.0, timeout=20):
+    """Run many searches through ONE warmed session, reusing the cookie jar.
+
+    `items` is a list of dicts: {label?, query, sort?, limit?}. Returns a dict keyed by
+    label (falling back to query) -> {query, products: [...]} or {query, error}. A small
+    `gap` spaces requests; a failed query re-warms the session and retries a couple times.
+    """
+    import time
+    opener = warm_opener(timeout=timeout)
+    results = {}
+    for idx, item in enumerate(items):
+        query = item["query"]
+        label = item.get("label") or query
+        sort = item.get("sort")
+        limit = int(item.get("limit", 30))
+        if idx:
+            time.sleep(gap)
+        products = None
+        for attempt in range(3):
+            try:
+                products = parse_products(fetch_search(query, limit, timeout=timeout, opener=opener))
+                break
+            except Exception:  # noqa: BLE001 - blocked/non-JSON; back off, re-warm, retry
+                time.sleep(gap * (attempt + 2))
+                try:
+                    opener = warm_opener(timeout=timeout)
+                except Exception:
+                    pass
+        if products is None:
+            results[label] = {"query": query, "error": "fetch failed after retries", "products": []}
+        else:
+            results[label] = {"query": query, "products": sort_products(products, sort)[:limit]}
+    return results
 
 
 def parse_products(raw):
@@ -188,11 +237,35 @@ def main(argv=None):
     import sys
 
     ap = argparse.ArgumentParser(description="Search Ocado and print products as JSON.")
-    ap.add_argument("query", help="search keyword, e.g. milk")
+    ap.add_argument("query", nargs="?", help="search keyword, e.g. milk")
     ap.add_argument("--limit", type=int, default=30, help="max products (default 30)")
     ap.add_argument("--sort", choices=["price", "rating", "price-per-unit"], default=None,
                     help="order results before output (client-side)")
+    ap.add_argument("--batch", metavar="FILE",
+                    help="path to a JSON file with a list of {label?,query,sort?,limit?}; "
+                         "runs all queries through one warmed session and prints a JSON "
+                         "object keyed by label. '-' reads the JSON from stdin.")
+    ap.add_argument("--gap", type=float, default=2.0,
+                    help="seconds between batch queries (default 2.0)")
     args = ap.parse_args(argv)
+
+    if args.batch:
+        try:
+            if args.batch == "-":
+                items = json.load(sys.stdin)
+            else:
+                with open(args.batch, encoding="utf-8") as fh:
+                    items = json.load(fh)
+        except Exception as exc:  # noqa: BLE001
+            print(f"ocado_search: could not read batch file: {exc}", file=sys.stderr)
+            return 1
+        results = run_batch(items, gap=args.gap)
+        json.dump(results, sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+        return 0
+
+    if not args.query:
+        ap.error("a query is required unless --batch is given")
 
     try:
         products = parse_products(fetch_search(args.query, args.limit))
