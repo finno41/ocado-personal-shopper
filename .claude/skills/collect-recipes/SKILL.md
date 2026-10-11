@@ -91,6 +91,12 @@ Show the user their saved recipes for this meal type from `RECIPES_DIR` — this
 includes both described and URL-derived recipes — as a numbered list. Load whichever
 they pick.
 
+**"Ask each shop" choices.** Some recipes have an ingredient the user wants to choose
+fresh every time (e.g. which noodle/pasta goes in a soup). When saving, mark that line
+with `(ASK EACH SHOP: <options>)` and say so in `## Notes`. Whenever a saved recipe is
+loaded, scan for `ASK EACH SHOP` and ask the user about each one before returning it;
+use their answer for this shop only (don't overwrite the saved file).
+
 ### 3. Return
 Return a structured list for this meal type. For each chosen recipe include:
 - `name`
