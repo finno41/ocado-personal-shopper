@@ -183,16 +183,23 @@ Show the user the finished, grouped, per-recipe-annotated shopping list.
 ## Step 9 — Deduct what they already have (interactive checklist)
 Capture "what they already have" with an **interactive checklist widget** (the
 visualize `show_widget` tool) rather than a free-text question, so the user can mark
-items with a tap. Build the widget from the finished pre-deduction list:
-- Group items by the same aisle categories, in order, and keep each line's recipe
-  annotation.
-- Give every item three states: **All** (has the full amount → remove entirely),
-  **Some** (has part → reveal an amount field and deduct that amount), and **None**
-  (checked, has none → keep in full). "None" is a review aid so the user can confirm
-  they've been through every line; include a live "x / N checked" counter.
-- A **Send** button collects the state and calls `sendPrompt(...)` to return a
-  structured message: a HAVE ALL list (remove entirely) and a HAVE SOME list (each with
-  the amount owned). Everything unmarked or marked None stays in full.
+items with a tap.
+
+**Build it as an elicitation form, with NO custom JavaScript.** A hand-rolled widget
+(own `<script>`, `onclick` handlers, `sendPrompt`) renders but **can't be clicked** in
+the desktop Code tab — this has failed twice. Load the visualize `elicitation` module
+and use its auto-wired `<form class="elicit">` shell (zero `<script>`, zero onclick):
+- One `.elicit-group` per item, in aisle-category order, label = amount + item +
+  recipe annotation (e.g. `550 g mature cheddar (Lasagne, Sandwich, Toasties)`).
+- Each group is a single-select `.elicit-pills` (`data-multi="false"`, unique
+  `data-name`) with three pills: **All** (has the full amount → remove entirely),
+  **Some** (marked `data-other`, which reveals a paired `.elicit-other` text input for
+  the amount owned), and **None** (has none → keep in full). Unmarked = keep in full.
+- Footer `elicit-submit` button labelled **Send**. The shell returns the answers as
+  one line of `Item: All / Some (amount) / None`.
+- **Send is one-shot** — pressing it submits and closes the form. Tell the user not to
+  press it until they've finished; if they send early/by accident, re-render the form.
+- There's no live "x / N checked" counter (that would need custom JS) — that's fine.
 
 The widget renders on desktop but **not on mobile**. If the user is on a phone, fall
 back to a plain-markdown `- [ ]` checklist (tappable in the mobile app) or just ask
