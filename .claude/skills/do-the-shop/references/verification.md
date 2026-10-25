@@ -49,7 +49,9 @@ ISSUES:
 > (5) every line notes which recipe(s) it came from (consumables marked as such);
 > (6) tinned/canned ingredients are expressed as a whole number of tins at their known
 > size, with the tin count recomputed from the *combined* total weight across recipes
-> (round up, note surplus) rather than tin counts from each recipe just added together.
+> (round up, note surplus) rather than tin counts from each recipe just added together;
+> (7) every line is a single product — flag any line that lists two or more different
+> products together (e.g. "1 red pepper, 1 green pepper") and suggest splitting it.
 >
 > [PASTE: per-recipe lists + compiled list]
 >

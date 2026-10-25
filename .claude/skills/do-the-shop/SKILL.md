@@ -165,6 +165,12 @@ Merge all scaled per-recipe ingredients (plus the chosen consumables) into **one
   generic ingredient (e.g. `eggs` → `Burford Brown medium eggs`), and apply any
   threshold rules (e.g. the granola under/over 360 g rule, which may add a second
   product). These preferences show up on the list itself, not only in the Step 12 brief.
+- **One product per line — never group different products onto one line.** Each thing
+  the user has to find and add to the basket gets its own line, e.g. `1 red pepper` and
+  `1 green pepper` as two lines, not `1 red pepper, 1 green pepper`; `40 g pickles` and
+  `40 g mayonnaise` separately; each fresh herb and each spice on its own line. Grouped
+  lines make it easy to miss an item when ticking off the basket (this caused misses
+  on 2026-10-25). Only genuinely identical ingredients are combined (summed) into one line.
 - Group by these aisle categories, in this order:
   **Produce · Meat & Fish · Dairy & Eggs · Bakery · Frozen · Tins & Jars ·
   Dry / Pantry · Herbs & Spices · Drinks · Household / Consumables.**
@@ -178,7 +184,9 @@ re-run with a fresh agent, until zero issues, cap 5). Prompt in
 `references/verification.md`.
 
 ## Step 8 — Present the final list
-Show the user the finished, grouped, per-recipe-annotated shopping list.
+Show the user the finished, grouped, per-recipe-annotated shopping list — **one
+product per line** (see Step 6), even when presenting it in chat. Don't condense lines
+for brevity; the same applies to the Step 11 deducted list.
 
 ## Step 9 — Deduct what they already have (interactive checklist)
 Capture "what they already have" with an **interactive checklist widget** (the
