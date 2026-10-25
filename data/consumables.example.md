@@ -26,7 +26,7 @@ offered unticked.
 - Laundry detergent
 
 ## Staples
-- Milk  (default: yes)
+- Milk
 - Butter
 - Eggs
 - Bread
